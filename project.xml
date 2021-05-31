@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="BrainStorm" package="com.xyzdigital.brainstorm" version="1.0.0" company="XYZ Digital" />
+	<app main="Main" path="Export" file="brainstorm" />
+	<window allow-high-dpi="true" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	
+	<assets path="Assets" rename="assets" />
+	
+</project>
