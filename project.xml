@@ -10,5 +10,7 @@
 	<haxelib name="openfl" />
 	
 	<assets path="Assets" rename="assets" />
+
+	<certificate team-id="V3T29AUKGC"/>
 	
 </project>

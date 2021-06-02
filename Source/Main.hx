@@ -1,18 +1,60 @@
 package;
 
+import openfl.events.MouseEvent;
+import openfl.display.Bitmap;
+import openfl.display.BitmapData;
 
+import openfl.events.Event;
 import openfl.text.TextFormat;
 import openfl.text.TextField;
 import openfl.text.AntiAliasType;
 import openfl.display.Sprite;
 
-
 class Main extends Sprite {
-	
-	
-	public function new () {
-		
-		super ();
+	private var cloudContainer: Sprite;
+	private var clouds:Array<Cloud> = [];
+	private var nextCloudTimeMs:Float;
+	private var thoughtPool = [
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought(""),
+		new Thought("Randomness sometimes clumps too much"),
+		new Thought("Add score tracking", "task"),
+		new Thought("Add red background flash when cloud hits bottom", "task"),
+		new Thought("Add ability to categorize thoughts", "task"),
+		new Thought("How many are needed in one level?"),
+		new Thought("Will this work?"),
+		new Thought("How should I structure thoughts?"),
+		new Thought("How do I trickle them down?"),
+		new Thought("Sometimes I miss making games")
+	];
+	private var txtThought: TextField;
+
+	public function new() {
+		super();
+
+		cloudContainer = new Sprite();
+		addChild(cloudContainer);
+
+		nextCloudTimeMs = getTime();
+
+		addEventListener(Event.ENTER_FRAME, handleEnterFrame);
 
 		var engramBlue = 0x3f51b5;
 		var dpiScale = stage.window.scale;
@@ -22,6 +64,21 @@ class Main extends Sprite {
 		headerBG.graphics.drawRect(0, 0, stage.stageWidth, 64 * dpiScale);
 		headerBG.graphics.endFill();
 		addChild(headerBG);
+
+		var logoSprite = new Sprite();
+		BitmapData.loadFromFile ("Assets/logo512.png").onComplete (function (bitmapData) {
+			trace("loaded");
+			var bitmap = new Bitmap (bitmapData);
+			var logoSize = Math.round(headerBG.height * 0.8);
+			var padding = (headerBG.height - logoSize) * 0.5;
+			bitmap.x = stage.stageWidth - logoSize - padding;
+			bitmap.y = padding;
+			bitmap.width = logoSize;
+			bitmap.height = logoSize;
+			logoSprite.addChild (bitmap);
+			
+		});
+		addChild(logoSprite);
 
 		var bottomNav = new Sprite();
 		var bottomNavHeight = (56 + 64) * dpiScale;
@@ -37,26 +94,18 @@ class Main extends Sprite {
 
 		var yPadding = 8 * dpiScale;
 		var contentWidth = Math.round(stage.stageWidth * 0.8);
-			
-		var textBox = new TextField();
-		textBox.selectable = false;
-		textBox.text = "This is where the thought will be populated when clicked";
-		textBox.antiAliasType = AntiAliasType.ADVANCED;
-		var tf = new TextFormat();
-		tf.color = 0xffffff;
-		tf.font = "Helvetica";
-		tf.size = Math.round(24 * dpiScale);
-		textBox.setTextFormat(tf);
-		textBox.height = 32 * dpiScale;
-		textBox.width = contentWidth;
-		textBox.x = (stage.stageWidth - textBox.width) * 0.5;
-		textBox.y = yPadding;
 
-		textEntryContainer.addChild(textBox);
+		txtThought = new TextField();
+		txtThought.selectable = false;
+		txtThought.width = contentWidth;
+		txtThought.x = (stage.stageWidth - txtThought.width) * 0.5;
+		txtThought.y = yPadding;
+
+		textEntryContainer.addChild(txtThought);
 
 		var textBoxUnderline = new Sprite();
 		textBoxUnderline.graphics.beginFill(engramBlue);
-		textBoxUnderline.graphics.drawRect(textBox.x, textBox.height + yPadding, textBox.width, 2 * dpiScale);
+		textBoxUnderline.graphics.drawRect(txtThought.x, 32 * dpiScale + yPadding, txtThought.width, 2 * dpiScale);
 		textBoxUnderline.graphics.endFill();
 
 		textEntryContainer.addChild(textBoxUnderline);
@@ -136,6 +185,48 @@ class Main extends Sprite {
 
 		addChild(bottomNav);
 	}
-	
-	
+
+	private function addThought() {
+		if (thoughtPool.length > 0) {
+			var currentThought = thoughtPool.pop();
+			var cloud = new Cloud(currentThought);
+			var left = Math.round(stage.stageWidth * 0.2) + cloud.width;
+			var right = Math.round(stage.stageWidth * 0.8) - cloud.width;
+			var range = right - left;
+			cloud.x = Math.round(left + (Math.random() * range));
+			cloud.addEventListener(MouseEvent.CLICK, handleCloudClicked);
+			clouds.push(cloud);
+
+			cloudContainer.addChild(cloud);
+
+			nextCloudTimeMs = getTime() + Math.random() * 4000;
+		} else {
+			nextCloudTimeMs = Math.NaN;
+		}
+	}
+
+	private function handleCloudClicked(e: MouseEvent) {
+		var cloud: Cloud = e.target;
+		txtThought.text = cloud.thought.body;
+		var tf = new TextFormat();
+		tf.color = 0xffffff;
+		tf.font = "Helvetica";
+		var dpiScale = stage.window.scale;
+		tf.size = Math.round(24 * dpiScale);
+		txtThought.setTextFormat(tf);
+	}
+
+	private function handleEnterFrame(e:Event) {
+		if (getTime() > nextCloudTimeMs) {
+			addThought();
+		}
+
+		for (cloud in clouds) {
+			cloud.y += 1;
+		}
+	}
+
+	private function getTime() {
+		return Date.now().getTime();
+	}
 }
